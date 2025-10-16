@@ -1,0 +1,151 @@
+* { box-sizing: border-box; }
+body {
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  margin: 0;
+  padding: 1rem;
+  background: #0a1f0f; /* Dark forest green background */
+  color: #e8f5e9; /* Light green text */
+}
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+}
+h1 { 
+  margin: 0 0 1rem 0; 
+  font-size: 1.8rem; 
+  color: #66bb6a; /* Frog green */
+  text-shadow: 0 0 20px rgba(102, 187, 106, 0.3);
+}
+.card {
+  background: #1b3a20; /* Swamp green card background */
+  border: 1px solid #2e5a33;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+label { display: block; margin-bottom: .5rem; color: #a5d6a7; }
+input[type="url"], input[type="text"], select {
+  width: 100%;
+  background: #0f2413; /* Dark green input */
+  color: #c8e6c9;
+  border: 1px solid #2e5a33;
+  border-radius: 6px;
+  padding: .6rem .8rem;
+}
+input[type="url"]:focus, input[type="text"]:focus, select:focus {
+  outline: none;
+  border-color: #66bb6a;
+  box-shadow: 0 0 4px rgba(102, 187, 106, 0.4);
+}
+button {
+  background: #43a047; /* Frog green button */
+  border: 0;
+  color: white;
+  padding: .6rem .9rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+button:hover { 
+  background: #388e3c; 
+  box-shadow: 0 2px 8px rgba(67, 160, 71, 0.4);
+  transform: translateY(-1px);
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.row { display: flex; gap: 1rem; align-items: center; }
+
+.job {
+  border: 1px solid #2e5a33;
+  border-radius: 6px;
+  padding: .5rem .75rem;
+  margin-bottom: .5rem;
+  background: #142917;
+}
+.job-title { font-weight: 600; margin-bottom: .25rem; color: #81c784; }
+.progress-wrap { background: #0a1f0f; border: 1px solid #2e5a33; border-radius: 6px; height: 12px; overflow: hidden; }
+.progress { 
+  background: linear-gradient(90deg, #4caf50, #66bb6a); /* Green gradient progress bar */
+  height: 100%; 
+  width: 0%; 
+  transition: width .2s ease;
+  box-shadow: 0 0 8px rgba(76, 175, 80, 0.5);
+}
+.small { color: #81c784; font-size: .9rem; }
+
+.history-item { border-bottom: 1px solid #2a2f3a; padding: .5rem 0; }
+.history-item:last-child { border-bottom: 0; }
+
+/* Side panel for playlist */
+.panel { 
+  position: fixed; 
+  top: 0; 
+  right: 0; 
+  height: 100%; 
+  width: 360px; 
+  background: #1b3a20; 
+  border-left: 2px solid #43a047; 
+  transform: translateX(100%); 
+  transition: transform .2s ease; 
+  z-index: 1000; 
+  display: flex; 
+  flex-direction: column;
+  box-shadow: -4px 0 12px rgba(0, 0, 0, 0.4);
+}
+.panel.show { transform: translateX(0); }
+.panel.hidden { display: block; }
+.panel-header { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  padding: .75rem; 
+  border-bottom: 1px solid #2e5a33;
+  background: #142917;
+}
+.panel-body { padding: .75rem; overflow: auto; flex: 1; }
+.panel-footer { padding: .75rem; border-top: 1px solid #2e5a33; }
+.panel-list { display: flex; flex-direction: column; gap: .5rem; }
+.panel-item { display: flex; gap: .5rem; align-items: flex-start; }
+.panel-item .title { flex: 1; color: #a5d6a7; }
+.panel-item input[type="checkbox"] { accent-color: #66bb6a; }
+
+/* Skeleton */
+.skel { 
+  background: linear-gradient(90deg, #1b3a20 25%, #2e5a33 37%, #1b3a20 63%); 
+  background-size: 400% 100%; 
+  animation: shimmer 1s infinite linear; 
+  border-radius: 4px; 
+  height: 14px; 
+}
+@keyframes shimmer { 0%{ background-position: 100% 0 } 100%{ background-position: 0 0 } }
+
+/* Cancel button */
+.cancel-btn {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.9rem;
+  background: #2e5a33;
+  color: #a5d6a7;
+  min-width: 32px;
+}
+.cancel-btn:hover {
+  background: #d32f2f;
+  color: white;
+}
+.cancel-btn:disabled {
+  background: #1b3a20;
+  color: #4a6f4f;
+}
+
+/* Additional green theme touches */
+h2 { color: #66bb6a; }
+a { color: #81c784; }
+a:hover { color: #a5d6a7; }
+select option { background: #1b3a20; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: #0a1f0f; }
+::-webkit-scrollbar-thumb { background: #2e5a33; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #43a047; }
