@@ -230,7 +230,7 @@ function addJob(jobId, req) {
     <div style="display:flex; justify-content:space-between; align-items:start;">
       <div style="flex:1;">
         <div class=\"job-title\" id=\"title-${jobId}\">${escapeHtml(req.title || req.url)}</div>
-        <div class=\"small\">${req.container}${req.force_mp4 ? ' • Force MP4' : ''}${req.playlist ? ' • Playlist' : ''}</div>
+        <div class=\"small\" id=\"subtitle-${jobId}\">${req.container}${req.force_mp4 ? ' • Force MP4' : ''}${req.playlist ? ' • Playlist' : ''}</div>
       </div>
       <button id=\"cancel-${jobId}\" class=\"cancel-btn\" title=\"Cancel download\">✕</button>
     </div>
@@ -238,7 +238,8 @@ function addJob(jobId, req) {
     <div class=\"small\" id=\"meta-${jobId}\"></div>
     <div class=\"small\" id=\"note-${jobId}\"></div>
     <div id=\"plist-wrap-${jobId}\" style=\"display:none; margin-top:.5rem;\">
-      <div class=\"progress-wrap\" title=\"Playlist progress\">\n        <div class=\"progress\" id=\"plist-${jobId}\"></div>
+      <div class=\"progress-wrap\" title=\"Playlist progress\">
+        <div class=\"progress\" id=\"plist-${jobId}\"></div>
       </div>
       <span class=\"small\" id=\"plist-text-${jobId}\" style=\"margin-left:.5rem;\"></span>
     </div>
@@ -268,7 +269,9 @@ function addJob(jobId, req) {
     try {
       const d = JSON.parse(e.data);
       onProgress(jobId, d, req);
-      if (d.status === 'done' || d.status === 'error') es.close();
+      if (d.status === 'done' || d.status === 'error' || d.status === 'cancelled') {
+        es.close();
+      }
     } catch (err) {}
   };
 }
@@ -304,26 +307,71 @@ function showPendingError(pendingId, msg) {
 }
 
 function onProgress(jobId, d, req) {
+  // Debug logging
+  console.log('Progress event:', jobId, d.status, d);
+  
   const prog = document.getElementById(`prog-${jobId}`);
+  const progWrap = prog ? prog.parentElement : null;
   const meta = document.getElementById(`meta-${jobId}`);
   const note = document.getElementById(`note-${jobId}`);
   const titleEl = document.getElementById(`title-${jobId}`);
+  const subtitleEl = document.getElementById(`subtitle-${jobId}`);
+  
+  // If elements don't exist, the job element might have been removed
+  if (!prog && !meta) {
+    console.error('Job elements missing for:', jobId);
+    return;
+  }
 
-  const st = jobState[jobId] || (jobState[jobId] = { total: null, doneSet: new Set(), filepath: null, currentIndex: null, currentTitle: null });
+  const st = jobState[jobId] || (jobState[jobId] = { total: null, doneSet: new Set(), filepath: null, currentIndex: null, currentTitle: null, isPlaylist: false });
 
   // Update current item header (title and index) for playlists
-  if (typeof d.playlist_index === 'number') { st.currentIndex = d.playlist_index; }
-  if (d.title) { st.currentTitle = d.title; }
-  if (titleEl) {
-    const totalKnown = (typeof d.total_items === 'number') ? d.total_items : (st.total || null);
-    const idx = (typeof st.currentIndex === 'number') ? st.currentIndex : (typeof d.playlist_index === 'number' ? d.playlist_index : null);
-    const name = st.currentTitle || d.title || req.title || req.url;
-    const prefix = (idx && totalKnown) ? `${idx}/${totalKnown} — ` : '';
-    titleEl.textContent = prefix + name;
+  if (typeof d.playlist_index === 'number' && d.playlist_index > 0) { 
+    st.currentIndex = d.playlist_index;
+  }
+  if (typeof d.total_items === 'number' && d.total_items > 0) {
+    st.total = d.total_items;
+    st.isPlaylist = d.total_items > 1;
+  }
+  
+  // Detect if this is a playlist based on req or response
+  const isPlaylist = st.isPlaylist || (st.total && st.total > 1) || req.playlist;
+  
+  // Always (re)build subtitle
+  if (subtitleEl) {
+    const parts = [req.container];
+    if (req.force_mp4) parts.push('Force MP4');
+    if (req.playlist || isPlaylist) {
+      parts.push('Playlist');
+    }
+    subtitleEl.textContent = parts.join(' • ');
+  }
+  
+  // Update title when we get a new track
+  if (d.title) {
+    // Store the current title
+    if (d.status === 'downloading' || d.status === 'postprocessing') {
+      st.currentTitle = d.title;
+    }
+    
+    // Update header to show just the track title
+    if (titleEl) {
+      titleEl.textContent = d.title;
+    }
+  }
+  
+  // Initial state or when we don't have a title yet
+  if (titleEl && !st.currentTitle && !d.title) {
+    if (req.title || req.url) {
+      titleEl.textContent = req.title || req.url;
+    }
   }
 
   // Update main progress
   if (d.progress && typeof d.progress.percent === 'number') {
+    if (progWrap && d.status !== 'done') {
+      progWrap.style.display = '';
+    }
     prog.style.width = Math.max(0, Math.min(100, d.progress.percent)).toFixed(2) + '%';
   }
 
@@ -356,12 +404,11 @@ function onProgress(jobId, d, req) {
   }
 
   // Playlist overall progress
-  if (typeof d.total_items === 'number') {
-    st.total = d.total_items;
+  if (st.total && st.total > 1) {
     const wrap = document.getElementById(`plist-wrap-${jobId}`);
     const bar = document.getElementById(`plist-${jobId}`);
     const txt = document.getElementById(`plist-text-${jobId}`);
-    if (wrap) wrap.style.display = '';
+    if (wrap && d.status !== 'done') wrap.style.display = '';
     if (d.playlist_index && (d.status === 'postprocessing' || d.status === 'finished')) {
       st.doneSet.add(Number(d.playlist_index));
     }
@@ -369,13 +416,26 @@ function onProgress(jobId, d, req) {
     const total = st.total || 0;
     const pct = total ? Math.max(0, Math.min(100, (done / total) * 100)) : 0;
     if (bar) bar.style.width = pct.toFixed(2) + '%';
-    if (txt) txt.textContent = total ? `${done}/${total}` : '';
+    if (txt) txt.textContent = total ? `${done}/${total} completed` : '';
   }
 
-  // Track completion and hide cancel button when done
-  if (d.status === 'done' || d.status === 'error' || d.status === 'cancelled') {
+  // Track completion and update UI accordingly
+  if (d.status === 'done') {
     const cancelBtn = document.getElementById(`cancel-${jobId}`);
     if (cancelBtn) cancelBtn.style.display = 'none';
+    // Show completion status
+    if (meta) meta.textContent = 'Download complete';
+    if (prog) prog.style.width = '0%';
+    if (progWrap) progWrap.style.display = 'none';
+    const wrap = document.getElementById(`plist-wrap-${jobId}`);
+    const txt = document.getElementById(`plist-text-${jobId}`);
+    if (wrap) wrap.style.display = 'none';
+    if (txt) txt.textContent = '';
+  } else if (d.status === 'error' || d.status === 'cancelled') {
+    const cancelBtn = document.getElementById(`cancel-${jobId}`);
+    if (cancelBtn) cancelBtn.style.display = 'none';
+    // Show error/cancelled status
+    if (meta) meta.textContent = d.status === 'error' ? 'Error occurred' : 'Cancelled';
   }
 }
 
