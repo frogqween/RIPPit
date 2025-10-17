@@ -246,7 +246,7 @@ function addJob(jobId, req) {
   jobsEl.appendChild(wrap);
   try { wrap.scrollIntoView({ behavior: 'smooth', block: 'end' }); } catch {}
 
-  jobState[jobId] = { total: null, doneSet: new Set(), filepath: null };
+  jobState[jobId] = { total: null, doneSet: new Set(), filepath: null, currentIndex: null, currentTitle: null };
   
   // Cancel button handler
   const cancelBtn = document.getElementById(`cancel-${jobId}`);
@@ -309,12 +309,17 @@ function onProgress(jobId, d, req) {
   const note = document.getElementById(`note-${jobId}`);
   const titleEl = document.getElementById(`title-${jobId}`);
 
-  const st = jobState[jobId] || (jobState[jobId] = { total: null, doneSet: new Set(), filepath: null, titleSet: false });
+  const st = jobState[jobId] || (jobState[jobId] = { total: null, doneSet: new Set(), filepath: null, currentIndex: null, currentTitle: null });
 
-  // Update title with actual video/track title once we have it
-  if (d.title && !st.titleSet && titleEl) {
-    titleEl.textContent = d.title;
-    st.titleSet = true;
+  // Update current item header (title and index) for playlists
+  if (typeof d.playlist_index === 'number') { st.currentIndex = d.playlist_index; }
+  if (d.title) { st.currentTitle = d.title; }
+  if (titleEl) {
+    const totalKnown = (typeof d.total_items === 'number') ? d.total_items : (st.total || null);
+    const idx = (typeof st.currentIndex === 'number') ? st.currentIndex : (typeof d.playlist_index === 'number' ? d.playlist_index : null);
+    const name = st.currentTitle || d.title || req.title || req.url;
+    const prefix = (idx && totalKnown) ? `${idx}/${totalKnown} — ` : '';
+    titleEl.textContent = prefix + name;
   }
 
   // Update main progress
@@ -325,7 +330,8 @@ function onProgress(jobId, d, req) {
   // Build meta line
   const parts = [];
   if (d.video_id) parts.push('[' + d.video_id + ']');
-  if (d.playlist_index) parts.push('item ' + d.playlist_index + (d.total_items ? '/' + d.total_items : ''));
+  const totalForMeta = (typeof d.total_items === 'number') ? d.total_items : (st.total || null);
+  if (d.playlist_index) parts.push('item ' + d.playlist_index + (totalForMeta ? '/' + totalForMeta : ''));
   if (d.speed) parts.push(formatBytes(d.speed) + '/s');
   if (d.eta) parts.push('eta ' + formatTime(d.eta));
   parts.push(d.status);

@@ -380,7 +380,12 @@ class DownloadManager:
         async def async_publish(payload: Dict[str, Any]):
             await self.publish(job.job_id, payload)
 
+        # Track current item index robustly even if playlist_index isn't provided
+        current_index: int = 0
+        last_video_id: Optional[str] = None
+
         def hook(d: Dict[str, Any]):
+            nonlocal current_index, last_video_id
             try:
                 # Check if job was cancelled
                 if job.job_id in self.cancelled_jobs:
@@ -397,6 +402,19 @@ class DownloadManager:
                         pi = id_to_index.get(vid)
                     except Exception:
                         pi = None
+                # Fallback when yt-dlp doesn't provide playlist_index
+                if not pi:
+                    if vid and vid != last_video_id:
+                        current_index += 1
+                        last_video_id = vid
+                    if current_index <= 0:
+                        current_index = 1
+                    pi = current_index
+                else:
+                    try:
+                        current_index = int(pi)
+                    except Exception:
+                        pass
                 base = {
                     "status": st,
                     "filename": d.get("filename") or d.get("tmpfilename"),
@@ -415,7 +433,7 @@ class DownloadManager:
                     t = base.get("total_bytes") or 0
                     dl = base.get("downloaded_bytes") or 0
                     pct = float(dl) / float(t) * 100.0 if t else None
-                    payload = {**base, "progress": {"percent": pct}}
+                    payload = {**base, "progress": {"percent": pct}, "total_items": total_items}
                     if self.loop:
                         asyncio.run_coroutine_threadsafe(async_publish(payload), self.loop)
                     # Update DB lightweight
@@ -428,7 +446,7 @@ class DownloadManager:
                         "site": base.get("extractor_key"),
                     })
                 elif st == "finished":
-                    payload = {**base, "status": "postprocessing"}
+                    payload = {**base, "status": "postprocessing", "total_items": total_items}
                     if self.loop:
                         asyncio.run_coroutine_threadsafe(async_publish(payload), self.loop)
                     db.update_job(job.job_id, {"status": "postprocessing"})
