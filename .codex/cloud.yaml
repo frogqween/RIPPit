@@ -1,0 +1,18 @@
+version: 1
+
+tasks:
+  dev:
+    label: "Run RIPPit"
+    description: "Install dependencies and launch the FastAPI server in the cloud."
+    directory: .
+    forwardPorts:
+      - 8000
+    env:
+      PYTHONUNBUFFERED: "1"
+    command: |
+      set -e
+      python -m venv .venv
+      source .venv/bin/activate
+      python -m pip install --upgrade pip
+      python -m pip install -r requirements.txt
+      uvicorn backend.app:app --host 0.0.0.0 --port 8000

@@ -14,7 +14,7 @@
       <form id="download-form">
         <label>URL
           <div class="row" style="gap:.5rem; align-items:center;">
-            <input id="url" type="url" placeholder="Paste link (YouTube, SoundCloud, TikTok, Instagram, X/Twitter, NTS...)" required style="flex:1;" />
+            <input id="url" type="url" placeholder="Paste a link or playlist (YouTube, SoundCloud, TikTok, Instagram, X/Twitter, NTS…)" required style="flex:1;" />
           </div>
         </label>
 
@@ -23,14 +23,14 @@
             <div class="format-select">
               <select id="container">
                 <optgroup label="Audio">
-                  <option value="original" data-info="original container/codec; no re-encode">Source</option>
-                  <option value="opus" data-info="webm; Opus VBR ~160 kbps; native on YouTube">Opus (251)</option>
-                  <option value="aac" data-info="m4a; AAC-LC VBR ~256 kbps; broad support">AAC (m4a)</option>
                   <option value="mp3" data-info="mp3; 320 kbps CBR; legacy compatibility">MP3</option>
+                  <option value="aac" data-info="m4a; AAC-LC VBR ~256 kbps; broad support">AAC (m4a)</option>
+                  <option value="opus" data-info="webm; Opus VBR ~160 kbps; native on YouTube">Opus (251)</option>
+                  <option value="original" data-info="original container/codec; no re-encode">Source</option>
                 </optgroup>
                 <optgroup label="Video">
-                  <option value="auto" data-info="highest video+audio available; prefers AV1 > VP9 > H.264">Best (auto)</option>
                   <option value="mp4" data-info="mp4; widest compatibility; often ≤1080p on YouTube">MP4 (H.264 + AAC)</option>
+                  <option value="auto" data-info="highest video+audio available; prefers AV1 > VP9 > H.264">Best</option>
                 </optgroup>
               </select>
               <div class="format-info-bubble" id="format-info-text" aria-live="polite"></div>
