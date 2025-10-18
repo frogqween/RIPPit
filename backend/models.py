@@ -11,11 +11,10 @@ class DownloadRequest(BaseModel):
     url: str
     # mode is now optional; backend will infer from container if not provided
     mode: Optional[Mode] = None
-    container: str = Field(description="Audio: mp3|m4a|opus|flac|wav; Video: mp4|mkv|webm")
+    container: str = Field(description="Audio: original|opus|aac|mp3; Video: auto|mp4")
     playlist: bool = False
     playlist_items: Optional[list[int]] = None  # list of 1-based indices to download
     selected_urls: Optional[list[str]] = None  # explicit list of entry URLs to download (overrides playlist_items)
-    force_mp4: bool = False
     cookie_file: Optional[str] = None
 
 

@@ -1,8 +1,6 @@
 const form = document.getElementById('download-form');
 const urlEl = document.getElementById('url');
 const containerEl = document.getElementById('container');
-const forceMp4Wrap = document.getElementById('force-mp4-wrap');
-const forceMp4El = document.getElementById('force_mp4');
 const jobsEl = document.getElementById('jobs');
 const submitBtn = document.querySelector('#download-form button[type="submit"]');
 const panelEl = document.getElementById('panel');
@@ -25,15 +23,6 @@ urlEl.addEventListener('drop', (e) => {
   const text = e.dataTransfer.getData('text/plain');
   if (text) urlEl.value = text.trim();
 });
-
-function updateFormatVisibility() {
-  const val = containerEl.value;
-  // Show force-mp4 toggle only when mp4 is selected
-  forceMp4Wrap.style.display = (val === 'mp4') ? '' : 'none';
-}
-
-containerEl.addEventListener('change', updateFormatVisibility);
-updateFormatVisibility();
 
 // Fetch default download directory (for Open folder fallback)
 const openFolderBtn = document.getElementById('open-downloads-folder');
@@ -118,7 +107,6 @@ async function enqueueWithItems(indices){
     container: containerEl.value,
     playlist: true,
     playlist_items: indices,
-    force_mp4: !!forceMp4El.checked,
   };
   const pendingId = addPendingJob(body);
   if (submitBtn) submitBtn.disabled = true;
@@ -177,7 +165,6 @@ form.addEventListener('submit', async (e) => {
     playlist: isPlaylist, // ensure playlist mode for playlist URLs
     playlist_items: itemsForReq,
     selected_urls: urlsForReq,
-    force_mp4: !!forceMp4El.checked,
   };
 
   // Instant feedback: add a pending row at the bottom and disable submit
@@ -230,7 +217,7 @@ function addJob(jobId, req) {
     <div style="display:flex; justify-content:space-between; align-items:start;">
       <div style="flex:1;">
         <div class=\"job-title\" id=\"title-${jobId}\">${escapeHtml(req.title || req.url)}</div>
-        <div class=\"small\" id=\"subtitle-${jobId}\">${req.container}${req.force_mp4 ? ' • Force MP4' : ''}${req.playlist ? ' • Playlist' : ''}</div>
+        <div class=\"small\" id=\"subtitle-${jobId}\">${req.container}${req.playlist ? ' • Playlist' : ''}</div>
       </div>
       <button id=\"cancel-${jobId}\" class=\"cancel-btn\" title=\"Cancel download\">✕</button>
     </div>
@@ -283,7 +270,7 @@ function addPendingJob(req) {
   wrap.id = `job-${pid}`;
   wrap.innerHTML = `
     <div class=\"job-title\" id=\"title-${pid}\">${escapeHtml(req.title || req.url)}</div>
-    <div class=\"small\">${req.container}${req.force_mp4 ? ' • Force MP4' : ''}${req.playlist ? ' • Playlist' : ''}</div>
+    <div class=\"small\">${req.container}${req.playlist ? ' • Playlist' : ''}</div>
     <div class=\"progress-wrap\"><div class=\"progress\" style=\"width:1%\"></div></div>
     <div class=\"small\">queued…</div>
   `;
@@ -340,7 +327,6 @@ function onProgress(jobId, d, req) {
   // Always (re)build subtitle
   if (subtitleEl) {
     const parts = [req.container];
-    if (req.force_mp4) parts.push('Force MP4');
     if (req.playlist || isPlaylist) {
       parts.push('Playlist');
     }
@@ -386,11 +372,7 @@ function onProgress(jobId, d, req) {
   meta.textContent = parts.join(' • ');
 
   // Notes
-  if ((req.container === 'mp4') && !req.force_mp4) {
-    note.textContent = 'If source isn\'t MP4/H.264, this may fall back to WebM or MKV without re-encoding.';
-  } else {
-    note.textContent = '';
-  }
+  note.textContent = '';
   if (d.status === 'error') {
     note.textContent = 'Error: ' + (d.error || 'Unknown error');
   }

@@ -4,10 +4,11 @@ Local downloader UI powered by FastAPI + yt-dlp + FFmpeg.
 
 What it does (v1)
 - Paste a URL from YouTube, SoundCloud, TikTok, Instagram, X/Twitter, NTS, etc.
-- Choose Audio (mp3, m4a/aac, opus, flac, wav) or Video (mp4, mkv, webm)
+- Choose Audio (original passthrough, Opus 251, AAC ~256k, MP3 320k) or Video (auto AV1 > VP9 > H.264, MP4 H.264)
 - Optional: Download entire playlist (checkbox)
 - Optional: Cookie file for your own account (auth-only content where supported)
 - Two concurrent downloads, queued beyond that
+- Aggressive multi-connection downloading (aria2c + high fragment concurrency) to saturate fast links without altering quality
 - Live progress bars (per-item) and simple history
 - Output structure: {site}/{uploader_or_channel}/{playlist_title?}/{playlist_index} - {title} [id].ext
   - Site comes from yt-dlp extractor key (e.g., YouTube, Soundcloud)
@@ -16,9 +17,8 @@ What it does (v1)
 Defaults per your spec
 - Windows default download dir: %USERPROFILE%/Desktop/Downloads
 - macOS default download dir: ~/Downloads/RIPPit
-- MP3: 320 kbps CBR
-- AAC/M4A & Opus: prefer source codec; remux when possible; otherwise re-encode (~256k AAC, ~160k Opus)
-- Video MP4: prefer H.264; if not available, falls back to WebM/MKV without re-encode unless you toggle "Force MP4 (re-encode)"
+- Audio: passthrough when possible; Opus targets YouTube 251, AAC ~256k VBR, MP3 320k CBR
+- Video: picks best DASH combo (AV1/VP9 -> WebM, H.264 -> MP4) up to 4K/60 without forced re-encode
 
 Prereqs
 - Python 3.11+ recommended
@@ -41,7 +41,6 @@ Setup (Windows PowerShell)
 Notes
 - Duplicate skipping: uses yt-dlp download archive at data/archive.txt
 - Metadata/cover art: enabled where possible via ffmpeg
-- If you select MP4 but the best stream is WebM/AV1 and you don’t force re-encode, it will fall back to WebM or MKV to avoid quality loss.
 - If a site changes, updating yt-dlp usually fixes it: .\.venv\Scripts\python -m pip install -U yt-dlp
 
 Planned (v1.1)

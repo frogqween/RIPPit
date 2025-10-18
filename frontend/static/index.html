@@ -22,21 +22,19 @@
           <label>Format
             <select id="container">
               <optgroup label="Audio">
-                <option value="mp3">mp3 (320kbps)</option>
-                <option value="m4a">m4a/aac</option>
-                <option value="wav">wav</option>
-                <option value="flac">flac</option>
-                <option value="opus">opus</option>
+                <option value="original">original / passthrough</option>
+                <option value="opus">opus (YouTube 251)</option>
+                <option value="aac">aac (~256 kbps VBR)</option>
+                <option value="mp3">mp3 (320 kbps)</option>
               </optgroup>
               <optgroup label="Video">
+                <option value="auto">auto (AV1 > VP9 > H.264)</option>
                 <option value="mp4">mp4 (H.264)</option>
-                <option value="mkv">mkv</option>
-                <option value="webm">webm</option>
               </optgroup>
             </select>
           </label>
           <label class="row" id="force-mp4-wrap" style="display:none;">
-            <input id="force_mp4" type="checkbox" /> Force MP4 (re-encode)
+            <input id="force_mp4" type="checkbox" checked />
           </label>
         </div>
 

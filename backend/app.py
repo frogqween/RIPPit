@@ -135,10 +135,10 @@ async def probe(url: str):
 @app.post("/api/download", response_model=DownloadResponse)
 async def enqueue_download(req: DownloadRequest):
     # Normalize containers and infer mode if missing
-    audio_allowed = {"mp3", "m4a", "aac", "opus", "flac", "wav"}
-    video_allowed = {"mp4", "mkv", "webm", "mov"}
+    audio_allowed = {"original", "opus", "aac", "mp3"}
+    video_allowed = {"auto", "mp4"}
 
-    c = (req.container or "").lower()
+    c = (req.container or "").strip().lower()
     if not c:
         raise HTTPException(400, detail="container is required")
 
@@ -159,7 +159,6 @@ async def enqueue_download(req: DownloadRequest):
         playlist=bool(req.playlist_items or req.selected_urls) or req.playlist,
         playlist_items=req.playlist_items,
         selected_urls=req.selected_urls,
-        force_mp4=req.force_mp4,
         cookie_file=req.cookie_file,
     )
     await manager.enqueue(job)
@@ -209,17 +208,14 @@ async def open_folder(req: OpenFolderRequest):
     system = platform.system()
     try:
         if system == "Windows":
-            # Open the real Downloads shell folder when applicable to avoid selection behavior
-            import subprocess, os
-            try:
-                from pathlib import Path as _P
-                downloads_path = str(_P.home() / "Downloads")
-                if os.path.normcase(str(p)) == os.path.normcase(downloads_path):
-                    subprocess.Popen(["explorer", "shell:Downloads"])
-                else:
-                    subprocess.Popen(["explorer", str(p)])
-            except Exception:
-                subprocess.Popen(["explorer", str(p)])
+            import subprocess
+            downloads_path = str(Path.home() / "Downloads")
+            target = "shell:Downloads" if os.path.normcase(str(p)) == os.path.normcase(downloads_path) else str(p)
+            creation = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+            subprocess.Popen(
+                ["cmd", "/c", "start", "", target],
+                creationflags=creation,
+            )
         elif system == "Darwin":
             import subprocess
             subprocess.Popen(["open", str(p)])
