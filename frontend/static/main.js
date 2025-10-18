@@ -3,6 +3,7 @@ const urlEl = document.getElementById('url');
 const containerEl = document.getElementById('container');
 const jobsEl = document.getElementById('jobs');
 const submitBtn = document.querySelector('#download-form button[type="submit"]');
+const formatInfoText = document.getElementById('format-info-text');
 const panelEl = document.getElementById('panel');
 if (panelEl) panelEl.classList.add('hidden');
 const panelList = document.getElementById('panel-list');
@@ -11,6 +12,29 @@ const panelSelectAll = document.getElementById('panel-select-all');
 let lastProbe = null;
 
 function one(el){ return el || document.createElement('div'); }
+
+function updateFormatInfoBubble() {
+  if (!containerEl || !formatInfoText) return;
+  const opt = containerEl.options[containerEl.selectedIndex];
+  const msg = opt ? opt.getAttribute('data-info') : '';
+  if (msg) {
+    formatInfoText.textContent = msg;
+    formatInfoText.classList.add('show');
+  } else {
+    formatInfoText.textContent = '';
+    formatInfoText.classList.remove('show');
+  }
+}
+
+if (containerEl && formatInfoText) {
+  updateFormatInfoBubble();
+  containerEl.addEventListener('change', updateFormatInfoBubble);
+  containerEl.addEventListener('input', updateFormatInfoBubble);
+  containerEl.addEventListener('focus', updateFormatInfoBubble);
+  containerEl.addEventListener('blur', () => {
+    formatInfoText.classList.remove('show');
+  });
+}
 
 // App state
 const jobState = {}; // jobId -> { total: number|null, doneSet: Set<number>, filepath: string|null, downloadDir: string|null }

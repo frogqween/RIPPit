@@ -208,14 +208,17 @@ async def open_folder(req: OpenFolderRequest):
     system = platform.system()
     try:
         if system == "Windows":
-            import subprocess
-            downloads_path = str(Path.home() / "Downloads")
-            target = "shell:Downloads" if os.path.normcase(str(p)) == os.path.normcase(downloads_path) else str(p)
-            creation = getattr(subprocess, "CREATE_NO_WINDOW", 0)
-            subprocess.Popen(
-                ["cmd", "/c", "start", "", target],
-                creationflags=creation,
-            )
+            # Open the real Downloads shell folder when applicable to avoid selection behavior
+            import subprocess, os
+            try:
+                from pathlib import Path as _P
+                downloads_path = str(_P.home() / "Downloads")
+                if os.path.normcase(str(p)) == os.path.normcase(downloads_path):
+                    subprocess.Popen(["explorer", "shell:Downloads"])
+                else:
+                    subprocess.Popen(["explorer", str(p)])
+            except Exception:
+                subprocess.Popen(["explorer", str(p)])
         elif system == "Darwin":
             import subprocess
             subprocess.Popen(["open", str(p)])

@@ -149,3 +149,27 @@ select option { background: #1b3a20; }
 ::-webkit-scrollbar-track { background: #0a1f0f; }
 ::-webkit-scrollbar-thumb { background: #2e5a33; border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: #43a047; }
+
+.format-select {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  position: relative;
+}
+
+.format-info-bubble {
+  min-width: 220px;
+  max-width: 260px;
+  background: rgba(15, 36, 19, 0.95);
+  border: 1px solid #2e5a33;
+  color: #c8e6c9;
+  padding: 0.6rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  display: none;
+}
+
+.format-info-bubble.show {
+  display: block;
+}
